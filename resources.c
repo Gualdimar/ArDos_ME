@@ -1,0 +1,441 @@
+#include <avr/pgmspace.h>
+
+//=============набор шкал===============
+const uint8_t l0[] PROGMEM = {0x7E}; //6 пкс
+const uint8_t l1[] PROGMEM = { 0x18 }; //2 пкс
+//---------------------------------------------//
+
+//=============логотип===============
+const uint8_t logo_img[] PROGMEM = { //логотип
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xF0, 0xF8, 0xF8,
+  0xF8, 0xF8, 0xF8, 0xF0, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0xF8,
+  0xF8, 0xF8, 0x78, 0x78, 0x78, 0x78, 0xF8, 0xF8, 0xF8, 0xF0, 0xF0, 0xE0,
+  0xC0, 0x00, 0x00, 0x00, 0x00, 0xC0, 0xE0, 0xF0, 0xF0, 0xF8, 0x98, 0x18,
+  0x18, 0x18, 0x18, 0x18, 0x18, 0xF8, 0xF0, 0xF0, 0xE0, 0xC0, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0xFE, 0xFF, 0xFF, 0x9F, 0x81,
+  0x81, 0x81, 0x9F, 0xFF, 0xFF, 0xFC, 0xF0, 0x00, 0x00, 0x00, 0x00, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFC, 0x1E, 0x0F, 0x0F, 0x0F, 0x06, 0x00, 0xFF, 0xFF,
+  0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xCF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0x00, 0xFC, 0xFF, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x1F, 0x36,
+  0x78, 0x78, 0x78, 0x36, 0x1F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0xFF, 0xFC,
+  0x00, 0xFC, 0xFE, 0xFF, 0xEF, 0xC7, 0xC7, 0x8F, 0x0F, 0x0E, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0xC0, 0xFC, 0xFF, 0xFF, 0xFF, 0x1F, 0x07, 0x07, 0x07,
+  0x07, 0x07, 0x07, 0x07, 0x3F, 0xFF, 0xFF, 0xFF, 0xF8, 0xC0, 0x00, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0x7E, 0x7F, 0x3F, 0x3F,
+  0x0F, 0x07, 0x00, 0x01, 0x0F, 0x1E, 0x38, 0x70, 0x60, 0xF0, 0xFE, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFC, 0xF0, 0x60, 0x70, 0x38, 0x1F, 0x07, 0x01,
+  0x00, 0x79, 0xF9, 0xF1, 0xF3, 0xF7, 0xFF, 0xFF, 0x7F, 0x3E, 0x00, 0x00
+};
+
+const uint8_t statusbar_bg[] PROGMEM = { //верхний бар
+    0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF,
+    0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF,
+    0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF,
+    0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF,
+    0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF,
+    0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF,
+    0XE7, 0XE7, 0XC3, 0X81, 0XFF, 0XFF, 0XFF, 0XFF,
+    0XFF, 0XFF, 0XFF, 0XDF, 0XC3, 0X81, 0XC3, 0XDF,
+    0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0X81, 0X81,
+    0X81, 0X81, 0X81, 0X81, 0X81, 0X81, 0X81, 0X81,
+    0X81, 0XC3, 0XFF, 0XFF
+};
+
+const uint8_t bat_alt_img[] PROGMEM = { //полоски заряда акб
+    0x81, 0xBD, 0x81, 0xBD, 0x81, 0xBD, 0x81, 0xBD, 0x81, 0xBD
+};
+
+const uint8_t sound_img[] PROGMEM = { 
+    0xdb, 0xe7, 0xbd, 0xdb, 0xe7
+};
+
+const uint8_t cross_img[] PROGMEM = {
+    0xbb, 0xd7, 0xef, 0xd7, 0xbb
+};
+
+const uint8_t excl_img[] PROGMEM = {
+    0xa1
+};
+
+const uint8_t alarm_img[] PROGMEM = {
+    0xe1
+};
+//=============режимы===============
+const uint8_t backgr_img[] PROGMEM = { //фон
+    0xC3, 0xDB,
+    0x81, 0xDB, 0xC3, 0xFF,
+    0xC3, 0xBD, 0xBD, 0xC3,
+    0xFF, 0x81, 0xEF, 0xEF,
+    0x81
+};
+
+const uint8_t dose_img[] PROGMEM = { //доза
+    0x9F, 0xC3,
+    0xDD, 0xC1, 0x9F, 0xFF,
+    0xC3, 0xBD, 0xBD, 0xC3,
+    0xFF, 0xDB, 0xBD, 0xB5,
+    0xCB, 0xFF, 0x83, 0xED,
+    0xED, 0x83
+};
+
+const uint8_t serch_img[] PROGMEM = { //поиск
+    0x81, 0xFD,
+    0xFD, 0x81, 0xFF, 0xC3,
+    0xBD, 0xBD, 0xC3, 0xFF,
+    0x81, 0xEF, 0xF7, 0x81,
+    0xFF, 0xC3, 0xBD, 0xBD,
+    0xDB, 0xFF, 0x81, 0xE7,
+    0xDB, 0xBD
+};
+
+const uint8_t measur_img[] PROGMEM = { //замер
+    0XDB, 0XBD,
+    0XB5, 0XCB, 0XFF, 0X83,
+    0XED, 0XED, 0X83, 0XFF,
+    0X81, 0XFB, 0XF7, 0XFB,
+    0X81, 0XFF, 0X81, 0XB5,
+    0XB5, 0XBD, 0XFF, 0X81,
+    0XED, 0XED, 0XF3
+};
+
+const uint8_t fast_menu_img[] PROGMEM = { //меню
+    0x81, 0xfb, 0xf7, 0xfb, 
+    0x81, 0xff, 0x81, 0xb5, 
+    0xb5, 0xbd, 0xff, 0x81, 
+    0xef, 0xef, 0x81, 0xff, 
+    0x81, 0xef, 0xc3, 0xbd, 
+    0xc3
+};
+
+const uint8_t settings_img[] PROGMEM = { //настройки
+    0X81, 0XEF,
+    0XEF, 0X81, 0XFF, 0X83,
+    0XED, 0XED, 0X83, 0XFF,
+    0XC3, 0XBD, 0XBD, 0XDB,
+    0XFF, 0XFD, 0XFD, 0X81,
+    0XFD, 0XFD, 0XFF, 0X81,
+    0XED, 0XED, 0XF3, 0XFF,
+    0XC3, 0XBD, 0XBD, 0XC3,
+    0XFF, 0X83, 0XDE, 0XEE,
+    0X83, 0XFF, 0X81, 0XE7,
+    0XDB, 0XBD, 0XFF, 0X81,
+    0XDF, 0XEF, 0X81
+};
+
+const uint8_t debug_img[] PROGMEM = { //отладка
+    0XC3, 0XBD,
+    0XBD, 0XC3, 0XFF, 0XFD,
+    0XFD, 0X81, 0XFD, 0XFD,
+    0XFF, 0X83, 0XFD, 0XFD,
+    0X83, 0XFF, 0X83, 0XED,
+    0XED, 0X83, 0XFF, 0X9F,
+    0XC3, 0XDD, 0XC3, 0X9F,
+    0XFF, 0X81, 0XE7, 0XDB,
+    0XBD, 0XFF, 0X83, 0XED,
+    0XED, 0X83
+};
+
+const uint8_t search_bg_left[] PROGMEM = {
+    0XFF, 0X81,
+    0XFF, 0X80,
+    0XFF, 0X80,
+    0XFF, 0X80
+};
+
+const uint8_t search_bg_right[] PROGMEM = {
+    0X81, 0XFF,
+    0X80, 0XFF,
+    0X80, 0XFF,
+    0X80, 0XFF
+};
+
+const uint8_t search_lines[][4] PROGMEM = {
+    { 0x00, 0x00, 0x00 , 0x80 },
+    { 0x00, 0x00, 0x00 , 0xC0 },
+    { 0x00, 0x00, 0x00 , 0xE0 },
+    { 0x00, 0x00, 0x00 , 0xF0 },
+    { 0x00, 0x00, 0x00 , 0xF8 },
+    { 0x00, 0x00, 0x00 , 0xFC },
+    { 0x00, 0x00, 0x00 , 0xFE },
+    { 0x00, 0x00, 0x00 , 0xFF },
+    { 0x00, 0x00, 0x80 , 0xFF },
+    { 0x00, 0x00, 0xC0 , 0xFF },
+    { 0x00, 0x00, 0xE0 , 0xFF },
+    { 0x00, 0x00, 0xF0 , 0xFF },
+    { 0x00, 0x00, 0xF8 , 0xFF },
+    { 0x00, 0x00, 0xFC , 0xFF },
+    { 0x00, 0x00, 0xFE , 0xFF },
+    { 0x00, 0x00, 0xFF , 0xFF },
+    { 0x00, 0x80, 0xFF , 0xFF },
+    { 0x00, 0xC0, 0xFF , 0xFF },
+    { 0x00, 0xE0, 0xFF , 0xFF },
+    { 0x00, 0xF0, 0xFF , 0xFF },
+    { 0x00, 0xF8, 0xFF , 0xFF },
+    { 0x00, 0xFC, 0xFF , 0xFF },
+    { 0x00, 0xFE, 0xFF , 0xFF },
+    { 0x00, 0xFF, 0xFF , 0xFF },
+    { 0x80, 0xFF, 0xFF , 0xFF },
+    { 0xC0, 0xFF, 0xFF , 0xFF },
+    { 0xE0, 0xFF, 0xFF , 0xFF },
+    { 0xF0, 0xFF, 0xFF , 0xFF },
+    { 0xF8, 0xFF, 0xFF , 0xFF },
+    { 0xFC, 0xFF, 0xFF , 0xFF },
+    { 0xFE, 0xFF, 0xFF , 0xFF },
+    { 0xFF, 0xFF, 0xFF , 0xFF },
+};
+
+const uint8_t fast_down_img[] PROGMEM = { //нижняя плашка быстрого меню
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xBF, 0x9F, 0xCF, 0xE7, 0xF3, 0xF9,
+    0xF9, 0xF3, 0xE7, 0xCF, 0x9F, 0xBF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+    0xFF, 0x81, 0xBD, 0xBD, 0x81, 0xFF, 0xFF, 
+    0x81, 0xE7, 0xDB, 0xBD, 0xFF, 0xFF, 0xFF, 
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFD, 0xF9, 0xF3, 0xE7, 0xCF, 0x9F,
+    0x9F, 0xCF, 0xE7, 0xF3, 0xF9, 0xFD, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
+const uint8_t fast_power_img[] PROGMEM = { //эмблемма "кнопки питания"
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x80, 0x00, 0x00,
+    0x80, 0xC0, 0xC0, 0x80,
+    0x00, 0x00, 0x80, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0xE0, 0xF8, 0xFC, 0x3E,
+    0x0F, 0x07, 0x00, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF,
+    0x00, 0x00, 0x07, 0x0F,
+    0x3E, 0xFC, 0xF8, 0xE0,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x07, 0x0F, 0x3F, 0x7C,
+    0x78, 0xF0, 0xE0, 0xC0,
+    0xC0, 0xC1, 0xC1, 0xC0,
+    0xC0, 0xE0, 0xF0, 0x78,
+    0x7C, 0x3F, 0x0F, 0x07,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x01,
+    0x01, 0x01, 0x01, 0x01,
+    0x01, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
+const uint8_t fast_light_img[] PROGMEM = { //эмблемма "подсветка"
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0xE0, 0xE0, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x80, 0x80, 0x81, 0x83,
+    0x86, 0xCC, 0xE8, 0xF0,
+    0xF8, 0xFB, 0x0B, 0x08,
+    0x10, 0x38, 0xCC, 0x86,
+    0x83, 0x81, 0x80, 0x80,
+    0x80, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x40, 0x60,
+    0x30, 0x19, 0x0F, 0x07,
+    0x0F, 0xEF, 0xE8, 0x08,
+    0x04, 0x0C, 0x1B, 0x30,
+    0x60, 0x40, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x03, 0x03, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
+const uint8_t fast_measur_img[] PROGMEM = { //эмблемма "замер"
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x07, 0x1e, 0x78, 0xe0, 0x88, 0x38, 0x38, 0x88, 0xe0, 0x78, 0x1e, 0x07, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xe0, 0x78, 0x1e, 0x87, 0xe1, 0xf8, 0xf8, 0xe1, 0x87, 0x1e, 0x78, 0xe0, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+//MENU
+const char sett_main0[] PROGMEM = "J,obt"; //Общие
+const char sett_main1[] PROGMEM = "Nhtdjuf"; //Тревога
+const char sett_main2[] PROGMEM = "Pder"; //Звук
+const char sett_main3[] PROGMEM = "Lfnxbrb"; //Датчики
+const char sett_main4[] PROGMEM = "Jnkflrf"; //Оталдка
+const char sett_main5[] PROGMEM = "Jnk. lfnxbrjd"; //Отл. датчиков
+
+const char *const sett_main_items[] PROGMEM =
+{
+    sett_main0, sett_main1, sett_main2,
+    sett_main3, sett_main4, sett_main5
+};
+
+const char sett_gen0[] PROGMEM = "Cbuvf"; //Сигма
+const char sett_gen1[] PROGMEM = "Dhtvz pfvthf d"; //Время замера в
+const char sett_gen2[] PROGMEM = "Dhtvz pfvthf"; // Время замера
+const char sett_gen3[] PROGMEM = "Jnrk gjlcdtnrb"; //Откл подсветки
+const char sett_gen4[] PROGMEM = "Rjynhfcn"; //Контраст
+const char sett_gen5[] PROGMEM = "Fdnjds[jl"; //Автовыход
+const char sett_gen6[] PROGMEM = "Cj[h. ljps"; //Сохр. дозы
+const char sett_gen7[] PROGMEM = "Cjy"; //Сон
+const char sett_gen8[] PROGMEM = "Byl. dj cyt"; //Инд. во сне
+const char sett_gen9[] PROGMEM = "Bylbrfnjh"; //Индикатор
+const char sett_gen10[] PROGMEM = "Uhfabr gjbcrf"; //График поиска
+const char sett_gen11[] PROGMEM = "Tl. bpvthtybz"; //Ед. измерения
+const char sett_gen12[] PROGMEM = "Jib,rb"; //Ошибки
+const char sett_gen13[] PROGMEM = "Jnkflrf"; //Отладка
+
+const char* const sett_gen_items[] PROGMEM =
+{
+    sett_gen0, sett_gen1, sett_gen2, sett_gen3,
+    sett_gen4, sett_gen5, sett_gen6, sett_gen7,
+    sett_gen8, sett_gen9, sett_gen10, sett_gen11,
+    sett_gen12, sett_gen13
+};
+
+const char sett_alarm0[] PROGMEM = "Fdnjjnrk/xtybt"; //Автоотключение
+const char sett_alarm1[] PROGMEM = "Nhtdjuf ajy"; //Тревога фон
+const char sett_alarm2[] PROGMEM = "Ajy gjhju 1"; //Фон порог 1
+const char sett_alarm3[] PROGMEM = "Ajy gjhju 2"; //Фон порог 2
+const char sett_alarm4[] PROGMEM = "Nhtdjuf ljpf"; //Тревога доза
+const char sett_alarm5[] PROGMEM = "Ljpf gjhju 1"; //Доза порог 1
+const char sett_alarm6[] PROGMEM = "Ljpf gjhju 2"; //Доза порог 2
+
+const char* const sett_alarm_items[] PROGMEM =
+{
+    sett_alarm0, sett_alarm1, sett_alarm2, sett_alarm3,
+    sett_alarm4, sett_alarm5, sett_alarm6
+};
+
+const char sett_sound0[] PROGMEM = "Ryjgrb"; //Кнопки
+const char sett_sound1[] PROGMEM = "Ltntrnjh"; //Детектор
+const char sett_sound2[] PROGMEM = "Njkmrj nhtdjuf"; //Только тревога
+const char sett_sound3[] PROGMEM = "Rjytw pfvthf"; //Конец замера
+const char sett_sound4[] PROGMEM = "Jib,rb"; //Ошибки
+
+const char* const sett_sound_items[] PROGMEM =
+{
+    sett_sound0, sett_sound1, sett_sound2, sett_sound3,
+    sett_sound4
+};
+
+const char sett_det0[] PROGMEM = "Lfnxbr 1"; //Датчик 1
+const char sett_det1[] PROGMEM = "Lfnxbr 2"; //Датчик 2
+const char sett_det2[] PROGMEM = "Lfnxbr 3"; //Датчик 3
+const char sett_det3[] PROGMEM = "Lfnxbr 4"; //Датчик 4
+const char sett_det4[] PROGMEM = "Cj,cnd. ajy"; //Собств. фон
+const char sett_det5[] PROGMEM = "Cj,cnd. ajy L1"; //Собств. фон Д1
+const char sett_det6[] PROGMEM = "Cj,cnd. ajy L2"; //Собств. фон Д2
+const char sett_det7[] PROGMEM = "Cj,cnd. ajy L3"; //Собств. фон Д3
+const char sett_det8[] PROGMEM = "Cj,cnd. ajy L4"; //Собств. фон Д4
+const char sett_det9[] PROGMEM = "Vthndjt dhtvz"; //Мертвое время
+const char sett_det10[] PROGMEM = "Vthndjt dhtvz"; //Мертвое время
+const char sett_det11[] PROGMEM = "Vthnd dhtvz jn"; //Мертв время от
+const char sett_det12[] PROGMEM = "Dhtvz cxtnf"; //Время счета
+//const char sett_det13[] PROGMEM = "Fdnjjnrk. lfn."; //Автооткл. дат.
+
+const char* const sett_det_items[] PROGMEM =
+{
+    sett_det0, sett_det1, sett_det2, sett_det3,
+    sett_det4, sett_det5, sett_det6, sett_det7,
+    sett_det8, sett_det9, sett_det10, sett_det11,
+    sett_det12//, sett_det13
+};
+
+const char sett_debug0[] PROGMEM = "JGH"; //ОПР
+const char sett_debug1[] PROGMEM = "BVG"; //ИПМ
+const char sett_debug2[] PROGMEM = "RLK"; //КДЛ
+const char sett_debug3[] PROGMEM = "FWG"; //АЦП
+
+const char* const sett_debug_items[] PROGMEM =
+{
+    sett_debug0, sett_debug1, sett_debug2, sett_debug3
+};
+
+const char sett_value0[] PROGMEM = "           drk"; //вкл
+const char sett_value1[] PROGMEM = "          dsrk"; //выкл
+const char sett_value2[] PROGMEM = "             %"; //%
+const char sett_value3[] PROGMEM = "           yPd"; //нЗв
+const char sett_value4[] PROGMEM = "           vrH"; //мкР
+const char sett_value5[] PROGMEM = " cktdf yfghfdj"; //слева направо
+const char sett_value6[] PROGMEM = " cghfdf yfktdj"; //справа налево
+const char sett_value7[] PROGMEM = "     exbnsdfnm"; //учитывать
+const char sett_value8[] PROGMEM = "  yt exbnsdfnm"; //не учитывать
+const char sett_value9[] PROGMEM = "           ctr"; //сек
+const char sett_value10[] PROGMEM = "%14u";
+const char sett_value11[] PROGMEM = "ctr%11u";
+const char sett_value12[] PROGMEM = "%%%13u";
+const char sett_value13[] PROGMEM = "vby%11u";
+const char sett_value14[] PROGMEM = "yPd|x%8u0";
+const char sett_value15[] PROGMEM = "vrH|x%9u";
+const char sett_value16[] PROGMEM = "yPd%10u0";
+const char sett_value17[] PROGMEM = "vrH%11u";
+const char sett_value18[] PROGMEM = "bvg|c    0.%03u";
+const char sett_value19[] PROGMEM = "vrctr%9u";
+const char sett_value20[] PROGMEM = "bvg|c%9u";
+
+#define SAMPLES_BAT_LOW  3 //количество семплов в массиве мелодии замера(1..255)
+
+const uint16_t bat_low_sound[SAMPLES_BAT_LOW][3] PROGMEM = { //массив семплов мелодии замера
+    3000, 200, 200, //семпл 0 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    2000, 200, 200, //семпл 1 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    1000, 200, 200  //семпл 2 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+};
+
+#define SAMPLES_ERROR  2 //количество семплов в массиве мелодии замера(1..255)
+
+const uint16_t error_sound[SAMPLES_ERROR][3] PROGMEM = { //массив семплов мелодии замера
+    2000, 200, 200, //семпл 0 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    3000, 200, 600, //семпл 1 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+};
+
+//Конфигурация звука предупреждения//
+#define SAMPLES_ALARM  4 //количество семплов в массиве мелодии замера(1..255)
+
+const uint16_t alarm_sound[SAMPLES_ALARM][3] PROGMEM = { //массив семплов мелодии замера
+    3000, 200, 200, //семпл 0 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    2000, 200, 200, //семпл 1 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    3000, 200, 200, //семпл 2 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    2000, 200, 1000 //семпл 3 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+};
+
+
+//Конфигурация звука тревоги//
+#define SAMPLES_WARN  9 //количество семплов в массиве мелодии замера(1..255)
+
+const uint16_t warn_sound[SAMPLES_WARN][3] PROGMEM = { //массив семплов мелодии замера
+    1100, 100, 150, //семпл 0 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    1100, 100, 150, //семпл 1 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    1100, 100, 150, //семпл 2 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    1100, 100, 150, //семпл 3 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    3000, 200, 250, //семпл 4 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    3000, 200, 250, //семпл 5 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    1100, 100, 150, //семпл 6 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    1100, 100, 150, //семпл 7 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    1100, 100, 550  //семпл 8 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+};
+
+#define SAMPLES_MEASUR  3 //количество семплов в массиве мелодии замера(1..255)
+
+const uint16_t measur_sound[SAMPLES_MEASUR][3] PROGMEM = { //массив семплов мелодии замера
+    3000, 100, 200, //семпл 0 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    3000, 100, 200, //семпл 1 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+    3000, 100, 200  //семпл 2 - частота(10..10000)(Hz) | длительность звука(50..500)(ms) | длительность паузы(50..1000)(ms)
+};

@@ -1,4 +1,4 @@
-#define VERSION "081120.1"
+#define VERSION "111120.2"
 //----------------Библиотеки----------------
 #include <Arduino.h>
 #include <avr/delay.h>
@@ -370,12 +370,12 @@ void data_manager() {
         rad_back = (((uint32_t)rad_back * settings.count_time) / (avg_period * det_count) + 500) * 0.001;
 
         if (rad_back > 9999499) rad_back = 9999499;
-        if (rad_back > rad_max && avg_period > 10) rad_max = rad_back;
+        if (rad_back > rad_max && (avg_period > 100 || accur < 0.10)) rad_max = rad_back;
 
         imp_dose += imp_buff[position];
         dose_time++;
         if (imp_dose > 0)
-            dose = settings.own_on ? (imp_dose * 1000UL - (uint32_t)dose_time*det_own)*settings.count_time / 3600000UL : (uint32_t)imp_dose*settings.count_time / 3600UL;
+            dose = settings.own_on ? (imp_dose * 1000UL - (uint32_t)dose_time*det_own)*settings.count_time / (3600000UL * det_count) : (uint32_t)imp_dose*settings.count_time / (3600UL * det_count);
 
         if (flags.measure) {
             measure.time++;
@@ -465,12 +465,10 @@ void alarm_manager() {
             if (dose >= settings.dose_th2) {
                 pointers.pointer = ALARM_DOSE2;
                 pointers.sound = SOUND_ALARM;
-                //flags.play_alarm_sound = 1;
             }
             else {
                 pointers.pointer = ALARM_DOSE1;
                 pointers.sound = SOUND_WARN;
-                //flags.play_warn_sound = 1;
             }
         }
     }
@@ -486,12 +484,10 @@ void alarm_manager() {
             if (rad_back >= settings.rad_th2) {
                 pointers.pointer = ALARM_RAD2;
                 pointers.sound = SOUND_ALARM;
-                //flags.play_alarm_sound = 1;
             }
             else {
                 pointers.pointer = ALARM_RAD1;
                 pointers.sound = SOUND_WARN;
-                //flags.play_warn_sound = 1;
             }
         }
     }
@@ -508,7 +504,6 @@ void alarm_manager() {
                     flags.screen = 1;
                     flags.statusbar_upd = 1;
                     flags.sound = 0;
-                    //flags.play_warn_sound = 0;
                 }
                 break;
             case ALARM_RAD2:
@@ -522,7 +517,6 @@ void alarm_manager() {
                     else pointers.pointer = ALARM_RAD1;
                     flags.screen = 1;
                     flags.statusbar_upd = 1;
-                    //flags.play_alarm_sound = 0;
                 }
                 break;
             }

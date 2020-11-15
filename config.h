@@ -48,7 +48,7 @@ void config() {
     settings.det_4_own = 200; //imp/s*1000
     settings.dead_time_on = 1;
     settings.det_dead_time = 200; // us
-    settings.det_dead_time_th = 100; //imp/s
+    settings.det_dead_time_th = 250; //imp/s
     settings.count_time = 55; // secs
     settings.high_count_det_off = 1;
 

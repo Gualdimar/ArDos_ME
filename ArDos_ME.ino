@@ -1,4 +1,4 @@
-#define VERSION "111120.2"
+#define VERSION "151120.3"
 //----------------Библиотеки----------------
 #include <Arduino.h>
 #include <avr/delay.h>
@@ -152,28 +152,31 @@ void initDevice() {
     clrScrLCD(); //очистка экрана
 }
 void detector_enable() {
+    uint16_t buff = 0;
+
     det_count = 0;
-    det_own = 0;
     if (settings.det_1_on) {
         det_count += 1;
-        det_own += settings.det_1_own;
+        buff += settings.det_1_own;
         det_1 = 0;
     }
     if (settings.det_2_on) {
         det_count += 1;
-        det_own += settings.det_2_own;
+        buff += settings.det_2_own;
         det_2 = 0;
     }
     if (settings.det_3_on) {
         det_count += 1;
-        det_own += settings.det_3_own;
+        buff += settings.det_3_own;
         det_3 = 0;
     }
     if (settings.det_4_on) {
         det_count += 1;
-        det_own += settings.det_4_own;
+        buff += settings.det_4_own;
         det_4 = 0;
     }
+
+    det_own = buff * 0.001;
 
     //det_off_th = DET_MAX_CNT / det_count;
 
@@ -349,6 +352,8 @@ void data_manager() {
 
     if (flags.data) {
         uint8_t position = imp_buff_pos == 0 ? IMP_BUFF_LENGTH - 1 : imp_buff_pos - 1;
+
+#pragma region RADIATION
         if (settings.dead_time_on && imp_buff[position] >= (settings.det_dead_time_th * det_count))
             imp_buff[position] = imp_buff[position] + imp_buff[position] * (1 - imp_buff[position] * settings.det_dead_time * 0.000001);
 
@@ -359,33 +364,55 @@ void data_manager() {
             avg_period--;
         }
 
-        uint32_t abb = avg_buff * 1000UL;
-        uint32_t doi = (uint32_t)avg_period * det_own;
+        uint8_t doi = (uint32_t)avg_period * det_own;
 
-        rad_back = settings.own_on ? abb > doi ? abb - doi : 0 : abb;
+        rad_back = settings.own_on ? avg_buff > doi ? avg_buff - doi : 0 : avg_buff;
 
         float old_accur = accur;
-        accur = 1 / sqrt(rad_back*0.001);
+        accur = 1 / sqrt(rad_back);
 
-        rad_back = (((uint32_t)rad_back * settings.count_time) / (avg_period * det_count) + 500) * 0.001;
+        rad_back = rad_back * settings.count_time / (avg_period * det_count);
 
         if (rad_back > 9999499) rad_back = 9999499;
-        if (rad_back > rad_max && (avg_period > 100 || accur < 0.10)) rad_max = rad_back;
+        if (rad_back > rad_max && (avg_period > 100 || accur < 0.1)) rad_max = rad_back;
 
+        uint32_t big_rad = rad_back * 1000UL;
+        if (avg_avg != 0) {
+            uint32_t pos_th = avg_avg * 3 * old_accur;
+            uint32_t neg_th = avg_avg > pos_th ? avg_avg - pos_th : 0;
+            pos_th += avg_avg;
+            if (big_rad > pos_th || big_rad < neg_th) {
+                avg_period = 1;
+                avg_buff = imp_buff[position];
+                avg_avg = 0;
+            }
+            else {
+                float koef = (avg_period > 99) ? 0.01 : 1.00 / avg_period;
+                avg_avg = big_rad * koef + avg_avg * (1 - koef);
+            }
+        }
+        else
+            avg_avg = big_rad;
+#pragma endregion
+
+#pragma region DOSE
         imp_dose += imp_buff[position];
         dose_time++;
-        if (imp_dose > 0)
-            dose = settings.own_on ? (imp_dose * 1000UL - (uint32_t)dose_time*det_own)*settings.count_time / (3600000UL * det_count) : (uint32_t)imp_dose*settings.count_time / (3600UL * det_count);
+        if (imp_dose < 78090314)
+            dose = settings.own_on ? (imp_dose - uint32_t(dose_time * det_own)) * settings.count_time / (3600 * det_count) : imp_dose * settings.count_time / (3600 * det_count);
+        else
+            dose = settings.own_on ? ((imp_dose - uint32_t(dose_time * det_own)) / (3600 * det_count)) * settings.count_time : (imp_dose / (3600 * det_count)) * settings.count_time;
+#pragma endregion
 
+#pragma region MEASURE
         if (flags.measure) {
             measure.time++;
             measure.imp += imp_buff[position];
-            abb = measure.imp * 1000UL;
             doi = (uint32_t)measure.time * det_own;
-            measure.rad = settings.own_on ? abb > doi ? abb - doi : 0 : abb;
-            measure.accur =(100 * settings.sigma / sqrt(measure.rad*0.001)) + 0.5;
+            measure.rad = settings.own_on ? measure.imp > doi ? measure.imp - doi : 0 : measure.imp;
+            measure.accur = 100 * settings.sigma / sqrt(measure.rad) + 0.5;
             if (!measure.accur) measure.accur = 255;
-            measure.rad = (((uint32_t)measure.rad * settings.count_time) / (measure.time * det_count) + 500) * 0.001;
+            measure.rad = measure.rad * settings.count_time / (measure.time * det_count);
             switch (settings.measure_time)
             {
             case 0:
@@ -408,25 +435,9 @@ void data_manager() {
                 break;
             }
         }
+#pragma endregion
 
         flags.data = 0;
-
-        uint32_t big_rad = rad_back * 1000UL;
-        if (avg_avg != 0) {
-            uint32_t pos_th = avg_avg * old_accur * 3;
-            uint32_t neg_th = avg_avg > pos_th ? avg_avg - pos_th : 0;
-            pos_th += avg_avg;
-            if (big_rad > pos_th || big_rad < neg_th) {
-                avg_period = 1;
-                avg_buff = imp_buff[position];
-                avg_avg = 0;
-                return;
-            }
-            float koef = (avg_period > 99) ? 0.01 : 1.00 / avg_period;
-            avg_avg = big_rad * koef + avg_avg * (1 - koef);
-        }
-        else
-            avg_avg = big_rad;
     }
 }
 void error_manager() {
@@ -582,7 +593,7 @@ void button_manager() {
                     switch (pointers.settscr_pointer)
                     {
                     case 0:
-                        pointers.cur_scr = SETT_GEMERAL_SCR;
+                        pointers.cur_scr = SETT_GENERAL_SCR;
                         break;
                     case 1:
                         pointers.cur_scr = SETT_ALARM_SCR;
@@ -604,6 +615,11 @@ void button_manager() {
                         pointers.prev_pointer = NO_SCR;
                         flags.selected = !flags.det_dbg;
                         flags.statusbar_upd = 1;
+                        break;
+                    case 6:
+                        poweroff();
+                        pointers.cur_scr = pointers.prev2_scr;
+                        pointers.pointer = pointers.mainscr_pointer;
                         break;
                     }
                 }
@@ -750,6 +766,9 @@ void fast_menu_button(uint8_t *button) {
         flags.bl_off = LIGHT_READ;
         break;
     case 3:
+        settings.det_sound = !settings.det_sound;
+        break;
+    case 4:
         if (pointers.prev_scr == MAIN_SCR) pointers.measure_pointer = pointers.pointer;
         pointers.cur_scr = MEASURE_SCR;
         pointers.pointer = 0;
@@ -760,10 +779,8 @@ void fast_menu_button(uint8_t *button) {
         measure.rad = 0;
         measure.time = 0;
         flags.measure = 0;
+        flags.btn_skip = 1;
         return;
-        break;
-    case 4:
-        poweroff();
         break;
     case 5:
         settings.rfflash_on = !settings.rfflash_on;
@@ -889,7 +906,7 @@ void pointerConstrain() {
     case SETT_MAIN_SCR:
         items = settings.debug_on ? SETT_ITEMS - 1 : SETT_ITEMS - 3;
         break;
-    case SETT_GEMERAL_SCR:
+    case SETT_GENERAL_SCR:
         items = GENERAL_ITEMS - 1;
         break;
     case SETT_ALARM_SCR:
@@ -914,7 +931,7 @@ void pointerConstrain() {
 void settings_value_down() {
     switch (pointers.cur_scr)
     {
-    case SETT_GEMERAL_SCR:
+    case SETT_GENERAL_SCR:
         switch (pointers.pointer)
         {
         case 0:
@@ -1089,7 +1106,7 @@ void settings_value_down() {
 void settings_value_up() {
     switch (pointers.cur_scr)
     {
-    case SETT_GEMERAL_SCR:
+    case SETT_GENERAL_SCR:
         switch (pointers.pointer)
         {
         case 0:
@@ -1536,6 +1553,18 @@ void monitoring_scr() {
         if (rad_max < 1000) {
             formatAndPrint("%3uvrH|x", rad_max, 10, RIGHT, 40);
         }
+        else if (rad_max < 10000) {
+            result = rad_max * 0.001;
+            formatAndPrint("%1u", result, 10, 36, 40);
+            result = (rad_max % 1000) * 0.1;
+            formatAndPrint(".%02uvH|x", result, 10, RIGHT, 40);
+        }
+        else if (rad_max < 100000) {
+            result = rad_max * 0.001;
+            formatAndPrint("%2u", result, 10, 36, 40);
+            result = (rad_max % 1000) * 0.01;
+            formatAndPrint(".%1uvH|x", result, 10, RIGHT, 40);
+        }
         else {
             result = (rad_max + 500) * 0.001;
             formatAndPrint("%4uvH|x", result, 10, RIGHT, 40);
@@ -1858,8 +1887,8 @@ void formatMeasure(uint32_t value, uint8_t y) {
     }
 }
 void fast_menu_scr() {
-    drawBitmapLCD(0, 8, fast_measur_img, 28, 32);
-    drawBitmapLCD(28, 8, fast_power_img, 28, 32);
+    drawBitmapLCD(0, 8, fast_sound_img, 28, 32);
+    drawBitmapLCD(28, 8, fast_measur_img, 28, 32);
     drawBitmapLCD(56, 8, fast_light_img, 28, 32);
     drawBitmapLCD(0, 40, fast_down_img, 84, 8);
 }
@@ -1896,7 +1925,7 @@ void settings_scr() {
     {
         switch (pointers.cur_scr)
         {
-        case SETT_GEMERAL_SCR:
+        case SETT_GENERAL_SCR:
             ptr = pgm_read_word(&(sett_gen_items[pointers.pointer]));
             sett_gen_m(str);
             break;

@@ -108,12 +108,12 @@ volatile struct
 #define BAT_MAX 70 //значение АЦП при заряженной батарее(0..255)
 
 uint8_t hv_adc, det_count, avg_period, dose_mask, bat_level, bat_adc;
-uint16_t det_own, det_off_th, speed_nak, dose_curr_offset, det_dbg_timeout;
+uint16_t det_off_th, speed_nak, dose_curr_offset, det_dbg_timeout;
 uint32_t imp_dose, dose_time, dose, dose_time_old, dose_old, rad_back, rad_max, avg_buff, avg_avg, btn_tmr;
 volatile uint8_t imp_buff_pos, det_1, det_2, det_3, det_4;
 volatile uint16_t imp_buff[IMP_BUFF_LENGTH];
 volatile uint32_t rf_timer;
-float accur;
+float accur, det_own;
 
 
 struct
@@ -171,7 +171,7 @@ struct
 #define MEASURE_SCR 1
 #define FAST_MENU_SCR 2
 #define SETT_MAIN_SCR 3
-#define SETT_GEMERAL_SCR 4
+#define SETT_GENERAL_SCR 4
 #define SETT_ALARM_SCR 5
 #define SETT_SOUND_SCR 6
 #define SETT_DET_SCR 7
@@ -182,7 +182,7 @@ struct
 #define ALARM_SCR 12
 
 #define MAIN_ITEMS 3
-#define SETT_ITEMS 6
+#define SETT_ITEMS 7
 #define GENERAL_ITEMS 14
 #define ALARM_ITEMS 7
 #define SOUND_ITEMS 5
